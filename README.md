@@ -18,7 +18,7 @@ Se usan las librerías tkinter, pytubefix, os y pillow. por lo que hay que insta
 - [@uri](https://www.github.com/U-r-i-05)
 
 
-## FAQ (preguntas freguentes)
+## OJO
 
 #### ERROR: pytubefix.exceptions.RegexMatchError: regex_search: could not find match for (?:v=|\/)([0-9A-Za-z_-]{11}).*".
 
