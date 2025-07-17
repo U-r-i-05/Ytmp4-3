@@ -1,6 +1,7 @@
 #cosas a importar
 from tkinter import messagebox, ttk
 import tkinter as tk
+from tkinter import filedialog
 import os
 from pytubefix import YouTube
 from pytubefix.cli import on_progress
@@ -31,26 +32,29 @@ def resoluciones_disponibles(event=None):
 #funcion para descargar video
 def descargar_video(event=None):
     url = enlace.get()
-    carpeta = directorio.get()# Obtiene la carpeta de destino
+    directorio= filedialog.askdirectory()
+    if not directorio:
+        print("No directory selected.")
+    carpeta = directorio # Obtiene la carpeta de destino seleccionandola
     yt = YouTube(url, use_oauth=False, allow_oauth_cache=False, on_progress_callback=on_progress)
+    titulo=yt.title # ahora el nombre será el del video
     selected_resolution = combo.get()
 
     # Filtrar el stream de video según la resolución seleccionada (ahora no nos importa el tipo)
     selected_stream = yt.streams.filter(res=selected_resolution, type="video").first()
 
     if selected_stream:
-        selected_stream.download(output_path=carpeta, filename="video.mp4")# Descargar el video en la resolución seleccionada
-    else:
+        selected_stream.download(output_path=carpeta, filename=f"{titulo} video.mp4")# Descargar el video en la resolución seleccionada
+    else: # Si no está disponible el stream de la resolución seleccionada, selecciona el de mayor resolución
         messagebox.showwarning(title="resolucion no encontrada", message="No se encontró un stream de video con resolución asignada. Descargando el mejor disponible...")
-        # Si no está disponible el stream de la resolución seleccionada, selecciona el de mayor resolución
         ys = yt.streams.get_highest_resolution()
-        ys.download(output_path=carpeta, filename="video.mp4")  # Descargar el video con la mejor resolución
+        ys.download(output_path=carpeta, filename=f"{titulo} video.mp4")  # Descargar el video con la mejor resolución
         messagebox.showinfo(title="estado de descarga",message="Descarga completa de video.")
         
 # Descargar el mejor stream de audio disponible
     audio_stream = yt.streams.filter(type="audio").first()
     if audio_stream:
-        audio_stream.download(output_path=carpeta, filename="audio.mp4")# Cambia la extensión si lo prefieres
+        audio_stream.download(output_path=carpeta, filename=f"{titulo} audio.mp4")# Cambia la extensión si lo prefieres
     else:
         messagebox.showerror(title="error en descarga", message="No se encontró un stream de audio adecuado.")
 
@@ -60,10 +64,15 @@ def descargar_video(event=None):
 #funcion para descargar audio.    (NO USAR VARIABLES GLOBALES,rompen todo)
 def descargar_audio(event=None):
     url = enlace.get()
-    carpeta = directorio.get()
+    directorio= filedialog.askdirectory()
+    if not directorio:
+        print("No directory selected.")
+    carpeta = directorio
     yt = YouTube(url, use_oauth=False, allow_oauth_cache=False, on_progress_callback=on_progress)
+    titulo=yt.title # ahora el nombre será el del video
     audio_stream = yt.streams.filter(type="audio").first()
-    audio_stream.download(output_path=carpeta, filename="audio.mp4")
+    audio_stream.download(output_path=carpeta, filename=f"{titulo} audio.mp4")
+    messagebox.showinfo(title="estado de descarga",message="Descarga de audio completada")
     
 
 #                                                 config de ventana
@@ -98,7 +107,7 @@ b_descargar_video=tk.Button(ventana,text='descargar video + audio',command=desca
 
 #cajas de texto y entrada
 enlace=tk.Entry(ventana, width=50,font=("Consolas", 13))# caja de texto 1(.get de aca)
-directorio=tk.Entry(ventana, width=50,font=("Consolas", 13))# caja de texto 2(.get de aca)
+
 
 # Evento para actualizar las resoluciones cuando se cambia la URL
 enlace.bind("<FocusOut>", resoluciones_disponibles)  # Actualiza resoluciones cuando el campo pierde foco
@@ -112,7 +121,5 @@ b_descargar_audio.place(x=650, y=100)# posicion de boton descarga audio
 b_descargar_video.place(x=650, y=50)# posicion de boton descarga video+audio
 enlace.place(x=80, y=80,height=30)# posicion de caja de texto 1
 enlace_t.place(x=80, y=50,height=30)# posicion de texto caja de texto 1
-directorio.place(x=80, y=180,height=30)# posicion de caja de texto 2
-directorio_t.place(x=80, y=150,height=30)# posicion de texto caja de texto 2
 
 ventana.mainloop()#-------------------------------termina la ventana------------------------------------------------
