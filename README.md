@@ -7,9 +7,12 @@ El programa posee 2 cajas de texto, 1 para ingresar el enlace y el 2do para ingr
 
 En caso de querer desargar video puedes escoger la calidad del mismo, en el caso del audio, solo se descargará la mejor resolucion disponible.
 
+Recientemente agregué un botón para probar un fondo, en caso de que quieras ver como se ve con tu fondo favorito, dale click y luego escoge el fondo. luego si quieres mantenerlo muevelo a la carpeta donde esta el exe.
+
 
 ## Uso del ejecutable:
-como todo código python convertido a .exe mediante pyinstaller, es detectado como virus por el antivirus, por ende, habrá un esfuerzo extra por parte del usuario para poner el directorio donde se guarde el ejecutable como excepción.
+Como todo código python convertido a .exe mediante pyinstaller, es detectado como virus por el antivirus, por ende, habrá un esfuerzo extra por parte del usuario para poner el directorio donde se guarde el ejecutable como excepción.
+Además, para cambiar la imagen de fondo por defecto, se debe eliminar el fondo pre-determinado y colocar la imagen deseada (formatos soportados: jpg, png y jpge), que por cierto, se ajustará automaticamente a la resolución del programa.
 
 ## Uso del código fuente:
 Se usan las librerías tkinter, pytubefix, os y pillow. por lo que hay que instalarlas en caso de querer usar el código. Además de tener una imagen para el fondo con la misma resolución de la ventana (900x300).
@@ -18,7 +21,7 @@ Se usan las librerías tkinter, pytubefix, os y pillow. por lo que hay que insta
 - [@uri](https://www.github.com/U-r-i-05)
 
 
-## OJO
+## posibles errores:
 
 #### ERROR: pytubefix.exceptions.RegexMatchError: regex_search: could not find match for (?:v=|\/)([0-9A-Za-z_-]{11}).*".
 
