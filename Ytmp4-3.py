@@ -4,16 +4,16 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 from pytubefix import YouTube
-from pytubefix.cli import on_progress
 from PIL import Image, ImageTk  # Importa Pillow
+import random
+import sys
 
 #-----------------------------------funciones a usar---------------------------------------------------------------
 
-# Función para descargar el video o audio(todas las funcionalidades de pytube poner como funcion/command)
 def resoluciones_disponibles(event=None):
     url = enlace.get()  # Obtiene la URL de la caja de texto  
     try:
-        yt = YouTube(url, use_oauth=False, allow_oauth_cache=False, on_progress_callback=on_progress)
+        yt = YouTube(url, use_oauth=False, allow_oauth_cache=False)
         
         # Lista para guardar las resoluciones
         resoluciones = []
@@ -27,53 +27,62 @@ def resoluciones_disponibles(event=None):
         combo['values'] = resoluciones
 
     except Exception as e:
-        messagebox.showerror("Error", f"Hubo un problema al obtener el video: {str(e)}") 
+        ventana.after(0,lambda:messagebox.showerror("Error", f"Hubo un problema al obtener el video: {str(e)}")) 
         
-#funcion para descargar video
 def descargar_video(event=None):
     url = enlace.get()
-    directorio= filedialog.askdirectory()
+    directorio= filedialog.askdirectory()# Obtiene la carpeta de destino seleccionandola
     if not directorio:
-        print("No directory selected.")
-    carpeta = directorio # Obtiene la carpeta de destino seleccionandola
-    yt = YouTube(url, use_oauth=False, allow_oauth_cache=False, on_progress_callback=on_progress)
+        print("No existe el directorio seleccionado.")
+    carpeta = directorio 
+    yt = YouTube(url, use_oauth=False, allow_oauth_cache=False)
     titulo=yt.title # ahora el nombre será el del video
-    selected_resolution = combo.get()
+    resolucion_seleccionada = combo.get()
 
     # Filtrar el stream de video según la resolución seleccionada (ahora no nos importa el tipo)
-    selected_stream = yt.streams.filter(res=selected_resolution, type="video").first()
+    stream_video_seleccionado = yt.streams.filter(res=resolucion_seleccionada, type="video").first()
 
-    if selected_stream:
-        selected_stream.download(output_path=carpeta, filename=f"{titulo} video.mp4")# Descargar el video en la resolución seleccionada
+    if stream_video_seleccionado:
+        stream_video_seleccionado.download(output_path=carpeta, filename=f"{titulo} video.mp4")# Descargar el video en la resolución seleccionada
     else: # Si no está disponible el stream de la resolución seleccionada, selecciona el de mayor resolución
-        messagebox.showwarning(title="resolucion no encontrada", message="No se encontró un stream de video con resolución asignada. Descargando el mejor disponible...")
-        ys = yt.streams.get_highest_resolution()
-        ys.download(output_path=carpeta, filename=f"{titulo} video.mp4")  # Descargar el video con la mejor resolución
-        messagebox.showinfo(title="estado de descarga",message="Descarga completa de video.")
+        ventana.after(0,lambda:messagebox.showwarning(title="resolucion no encontrada", message="No se encontró un stream de video con resolución asignada. Descargando el mejor disponible..."))
+        mejor_disponible = yt.streams.get_highest_resolution()
+        mejor_disponible.download(output_path=carpeta, filename=f"{titulo} video.mp4")  # Descargar el video con la mejor resolución
+        ventana.after(0,lambda:messagebox.showinfo(title="estado de descarga",message="Descarga completa de video."))
         
 # Descargar el mejor stream de audio disponible
     audio_stream = yt.streams.filter(type="audio").first()
     if audio_stream:
-        audio_stream.download(output_path=carpeta, filename=f"{titulo} audio.mp4")# Cambia la extensión si lo prefieres
+        audio_stream.download(output_path=carpeta, filename=f"{titulo} audio.mp3")
     else:
-        messagebox.showerror(title="error en descarga", message="No se encontró un stream de audio adecuado.")
+        ventana.after(0,lambda:messagebox.showerror(title="error en descarga", message="No se encontró un stream de audio adecuado."))
 
-    messagebox.showinfo(title="estado de descarga",message="Descarga de video y audio por separado completada")  
-    #pass
-
-#funcion para descargar audio.    (NO USAR VARIABLES GLOBALES,rompen todo)
+    ventana.after(0,lambda:messagebox.showinfo(title="estado de descarga",message="Descarga de video y audio por separado completada"))  
+  
 def descargar_audio(event=None):
     url = enlace.get()
     directorio= filedialog.askdirectory()
     if not directorio:
-        print("No directory selected.")
+        ventana.after(0,lambda:messagebox.showwarning(title="error de directorio",message="no se seleccionó un directorio"))
     carpeta = directorio
-    yt = YouTube(url, use_oauth=False, allow_oauth_cache=False, on_progress_callback=on_progress)
+    yt = YouTube(url, use_oauth=False, allow_oauth_cache=False)
     titulo=yt.title # ahora el nombre será el del video
     audio_stream = yt.streams.filter(type="audio").first()
-    audio_stream.download(output_path=carpeta, filename=f"{titulo} audio.mp4")
-    messagebox.showinfo(title="estado de descarga",message="Descarga de audio completada")
-    
+    audio_stream.download(output_path=carpeta, filename=f"{titulo} audio.mp3")
+    ventana.after(0,lambda:messagebox.showinfo(title="estado de descarga",message="Descarga de audio completada"))
+
+def cambiar_fondo(event=None):
+    global image
+    # Ruta de la imagen con respecto al script o .exe
+    ruta = filedialog.askopenfilename(
+        filetypes=[("Imágenes", "*.png *.jpg *.jpeg")]
+    )
+    if ruta:
+        image=Image.open(ruta)
+        image=image.resize((900,300))
+        fondo=bg = ImageTk.PhotoImage(image)
+        label1.config(image=fondo)
+        
 
 #                                                 config de ventana
 ventana = tk.Tk()#--------------------------------inicia la ventana------------------------------------------------
@@ -81,14 +90,25 @@ ventana.config(width=900, height=300)
 ventana.title("Convertidor Youtube a mp4/mp3")
 ventana.resizable(False, False)  # Desactiva la opción de cambiar el tamaño
 
-#imagen de fondo
 # Obtener la ruta donde está el script o .exe
-script_dir = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    script_dir = os.path.dirname(sys.executable)  # carpeta del .exe
+else:
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # carpeta del script
 
-# Ruta de la imagen con respecto al script o .exe
-image_path = os.path.join(script_dir, 'fondo del convertidor.jpg')
+archivos=os.listdir(script_dir)
+
+imagenes = [
+        f for f in archivos
+        if os.path.isfile(os.path.join(script_dir, f))
+        and f.lower().endswith((".jpg", ".png", ".jpeg"))
+    ]
+
+# Ruta de la imagen con respecto al script o .exe (y agarra cualquier imagen que tenga ese directorio)
+ruta = os.path.join(script_dir, random.choice(imagenes))
 # Carga la imagen usando Pillow
-image = Image.open(image_path)
+image = Image.open(ruta)
+image=image.resize((900,300))
 # Convierte la imagen a un formato compatible con Tkinter
 bg = ImageTk.PhotoImage(image)
 # Muestra la imagen en un label
@@ -104,9 +124,9 @@ directorio_t=tk.Label(ventana,text='Ingrese el directorio donde guardar la desca
 #botones
 b_descargar_audio=tk.Button(ventana,text='descargar audio',command=descargar_audio,font=("Consolas", 11))
 b_descargar_video=tk.Button(ventana,text='descargar video + audio',command=descargar_video,font=("Consolas", 11))
-
+b_cambiar_fondo=tk.Button(ventana,text='probar otro fondo',command=cambiar_fondo,font=("Consolas",11))
 #cajas de texto y entrada
-enlace=tk.Entry(ventana, width=50,font=("Consolas", 13))# caja de texto 1(.get de aca)
+enlace=tk.Entry(ventana, width=50,font=("Consolas", 13))# caja de texto 1(.get toma de aca)
 
 
 # Evento para actualizar las resoluciones cuando se cambia la URL
@@ -119,6 +139,7 @@ calidad.place(x=645, y=160)# posicion texto arriba de desplegable
 combo.place(x=650, y=180)# posicion de menu desplegable
 b_descargar_audio.place(x=650, y=100)# posicion de boton descarga audio
 b_descargar_video.place(x=650, y=50)# posicion de boton descarga video+audio
+b_cambiar_fondo.place(x=80, y=150)# posicion de boton cambio de fondo
 enlace.place(x=80, y=80,height=30)# posicion de caja de texto 1
 enlace_t.place(x=80, y=50,height=30)# posicion de texto caja de texto 1
 
